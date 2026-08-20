@@ -7,9 +7,9 @@ export async function onRequest(context) {
   const path = url.pathname.split("/").filter((p) => p);
 
   // A helper function to ensure all our responses are JSON
-  const jsonResponse = (data, status = 200) => {
+  const jsonResponse = (data, status = 200, extraHeaders = {}) => {
     return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...extraHeaders },
       status: status,
     });
   };
@@ -31,7 +31,42 @@ export async function onRequest(context) {
     // Check for a request to /api/categories
     if (path.length === 2 && path[1] === "categories") {
       const { results } = await env.DB.prepare("SELECT * FROM Category").all();
-      return jsonResponse(results);
+      // The category list only changes when the database is re-seeded, so it's
+      // safe for the browser/CDN to cache it for a while.
+      return jsonResponse(results, 200, {
+        "Cache-Control": "public, max-age=3600",
+      });
+    }
+
+    // Check for a request to /api/words/<some_id>?count=N
+    // Returns a batch of random words for a category in a single D1 read, so a
+    // whole play session doesn't need one round-trip per round.
+    if (path.length === 3 && path[1] === "words" && path[2]) {
+      const categoryId = path[2];
+      const requestedCount = Number.parseInt(url.searchParams.get("count"), 10);
+      const count =
+        Number.isFinite(requestedCount) && requestedCount > 0
+          ? Math.min(requestedCount, 25)
+          : 15;
+
+      const stmt = env.DB.prepare(
+        "SELECT Word FROM Words_in_Category WHERE Category_Id = ? ORDER BY RANDOM() LIMIT ?"
+      );
+      const { results } = await stmt.bind(categoryId, count).all();
+
+      if (results.length > 0) {
+        return jsonResponse(
+          { Category_Id: categoryId, words: results.map((r) => r.Word) },
+          200,
+          { "Cache-Control": "no-store" }
+        );
+      } else {
+        return jsonResponse(
+          { error: `No words found for category ID: ${categoryId}` },
+          404,
+          { "Cache-Control": "no-store" }
+        );
+      }
     }
 
     // Check for a request to /api/word/<some_id>
@@ -43,12 +78,13 @@ export async function onRequest(context) {
       const { results } = await stmt.bind(categoryId).all();
 
       if (results.length > 0) {
-        return jsonResponse(results[0]);
+        return jsonResponse(results[0], 200, { "Cache-Control": "no-store" });
       } else {
         // This handles the case where a category exists but has no words
         return jsonResponse(
           { error: `No words found for category ID: ${categoryId}` },
-          404
+          404,
+          { "Cache-Control": "no-store" }
         );
       }
     }

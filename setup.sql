@@ -1,21 +1,40 @@
+-- Hangman (Class XII CBSE case study 2.6.2 - Online Game)
+-- Backend database for Cloudflare D1.
+--
+-- Schema follows the tables printed in the case study:
+--   Category         (Category_Id, Category_Name)
+--   Words_in_Category(Category_Id, Word)
+--
+-- WARNING: this script DROPS both tables before recreating them.
+-- Running it against the live D1 database wipes the existing data and re-seeds it.
+
 DROP TABLE IF EXISTS Words_in_Category;
 DROP TABLE IF EXISTS Category;
+
 CREATE TABLE Category (
     Category_Id TEXT PRIMARY KEY,
     Category_Name TEXT NOT NULL UNIQUE
 );
+
 CREATE TABLE Words_in_Category (
     Word_Id INTEGER PRIMARY KEY AUTOINCREMENT,
     Word TEXT NOT NULL,
     Category_Id TEXT,
     FOREIGN KEY (Category_Id) REFERENCES Category(Category_Id) ON DELETE CASCADE
 );
+
 INSERT INTO Category (Category_Id, Category_Name) VALUES
 ('C1', 'Countries'),
 ('C2', 'Animals'),
 ('C3', 'Fruits'),
 ('C4', 'Vegetables'),
 ('C5', 'Capitals');
+
+-- Every word below is UPPERCASE, uses only the letters A-Z (no spaces, hyphens
+-- or accents, because the on-screen keyboard offers exactly 26 letters) and is
+-- between 4 and 12 characters long, within the Varchar(15) of the case study.
+
+-- C1 : Countries (50)
 INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('INDIA', 'C1'),
 ('CANADA', 'C1'),
@@ -26,7 +45,49 @@ INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('FRANCE', 'C1'),
 ('GERMANY', 'C1'),
 ('ITALY', 'C1'),
-('MEXICO', 'C1');
+('MEXICO', 'C1'),
+('NEPAL', 'C1'),
+('BHUTAN', 'C1'),
+('CHINA', 'C1'),
+('RUSSIA', 'C1'),
+('SPAIN', 'C1'),
+('PORTUGAL', 'C1'),
+('GREECE', 'C1'),
+('NORWAY', 'C1'),
+('SWEDEN', 'C1'),
+('FINLAND', 'C1'),
+('DENMARK', 'C1'),
+('ICELAND', 'C1'),
+('IRELAND', 'C1'),
+('POLAND', 'C1'),
+('HUNGARY', 'C1'),
+('AUSTRIA', 'C1'),
+('BELGIUM', 'C1'),
+('NETHERLANDS', 'C1'),
+('SWITZERLAND', 'C1'),
+('THAILAND', 'C1'),
+('VIETNAM', 'C1'),
+('MALAYSIA', 'C1'),
+('SINGAPORE', 'C1'),
+('INDONESIA', 'C1'),
+('MONGOLIA', 'C1'),
+('TURKEY', 'C1'),
+('ISRAEL', 'C1'),
+('JORDAN', 'C1'),
+('KENYA', 'C1'),
+('NIGERIA', 'C1'),
+('ETHIOPIA', 'C1'),
+('MOROCCO', 'C1'),
+('TANZANIA', 'C1'),
+('MADAGASCAR', 'C1'),
+('ARGENTINA', 'C1'),
+('CHILE', 'C1'),
+('COLOMBIA', 'C1'),
+('ECUADOR', 'C1'),
+('BANGLADESH', 'C1'),
+('KAZAKHSTAN', 'C1');
+
+-- C2 : Animals (50)
 INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('LION', 'C2'),
 ('TIGER', 'C2'),
@@ -37,7 +98,49 @@ INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('KANGAROO', 'C2'),
 ('MONKEY', 'C2'),
 ('DOLPHIN', 'C2'),
-('CROCODILE', 'C2');
+('CROCODILE', 'C2'),
+('LEOPARD', 'C2'),
+('CHEETAH', 'C2'),
+('RHINOCEROS', 'C2'),
+('HIPPOPOTAMUS', 'C2'),
+('BUFFALO', 'C2'),
+('CAMEL', 'C2'),
+('DONKEY', 'C2'),
+('RABBIT', 'C2'),
+('SQUIRREL', 'C2'),
+('HEDGEHOG', 'C2'),
+('PORCUPINE', 'C2'),
+('MONGOOSE', 'C2'),
+('JACKAL', 'C2'),
+('HYENA', 'C2'),
+('PANDA', 'C2'),
+('KOALA', 'C2'),
+('GORILLA', 'C2'),
+('CHIMPANZEE', 'C2'),
+('ORANGUTAN', 'C2'),
+('OTTER', 'C2'),
+('BEAVER', 'C2'),
+('RACCOON', 'C2'),
+('REINDEER', 'C2'),
+('ANTELOPE', 'C2'),
+('OSTRICH', 'C2'),
+('PEACOCK', 'C2'),
+('FLAMINGO', 'C2'),
+('PELICAN', 'C2'),
+('SPARROW', 'C2'),
+('PARROT', 'C2'),
+('TORTOISE', 'C2'),
+('IGUANA', 'C2'),
+('CHAMELEON', 'C2'),
+('SALAMANDER', 'C2'),
+('OCTOPUS', 'C2'),
+('JELLYFISH', 'C2'),
+('SEAHORSE', 'C2'),
+('BUTTERFLY', 'C2'),
+('DRAGONFLY', 'C2'),
+('PLATYPUS', 'C2');
+
+-- C3 : Fruits (50)
 INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('APPLE', 'C3'),
 ('MANGO', 'C3'),
@@ -48,7 +151,49 @@ INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('PINEAPPLE', 'C3'),
 ('WATERMELON', 'C3'),
 ('CHERRY', 'C3'),
-('PEACH', 'C3');
+('PEACH', 'C3'),
+('GUAVA', 'C3'),
+('PAPAYA', 'C3'),
+('LYCHEE', 'C3'),
+('JACKFRUIT', 'C3'),
+('POMEGRANATE', 'C3'),
+('APRICOT', 'C3'),
+('BLUEBERRY', 'C3'),
+('RASPBERRY', 'C3'),
+('BLACKBERRY', 'C3'),
+('CRANBERRY', 'C3'),
+('MULBERRY', 'C3'),
+('GOOSEBERRY', 'C3'),
+('PLUM', 'C3'),
+('PEAR', 'C3'),
+('KIWI', 'C3'),
+('MUSKMELON', 'C3'),
+('CANTALOUPE', 'C3'),
+('TANGERINE', 'C3'),
+('GRAPEFRUIT', 'C3'),
+('LEMON', 'C3'),
+('LIME', 'C3'),
+('COCONUT', 'C3'),
+('AVOCADO', 'C3'),
+('SAPOTA', 'C3'),
+('TAMARIND', 'C3'),
+('STARFRUIT', 'C3'),
+('DRAGONFRUIT', 'C3'),
+('PERSIMMON', 'C3'),
+('NECTARINE', 'C3'),
+('OLIVE', 'C3'),
+('MANGOSTEEN', 'C3'),
+('RAMBUTAN', 'C3'),
+('POMELO', 'C3'),
+('QUINCE', 'C3'),
+('CURRANT', 'C3'),
+('ELDERBERRY', 'C3'),
+('HONEYDEW', 'C3'),
+('BREADFRUIT', 'C3'),
+('PLANTAIN', 'C3'),
+('DATES', 'C3');
+
+-- C4 : Vegetables (50)
 INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('CARROT', 'C4'),
 ('BROCCOLI', 'C4'),
@@ -59,7 +204,49 @@ INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('CUCUMBER', 'C4'),
 ('PUMPKIN', 'C4'),
 ('CABBAGE', 'C4'),
-('LETTUCE', 'C4');
+('LETTUCE', 'C4'),
+('CAULIFLOWER', 'C4'),
+('BRINJAL', 'C4'),
+('EGGPLANT', 'C4'),
+('CAPSICUM', 'C4'),
+('PEAS', 'C4'),
+('BEANS', 'C4'),
+('RADISH', 'C4'),
+('BEETROOT', 'C4'),
+('TURNIP', 'C4'),
+('GARLIC', 'C4'),
+('GINGER', 'C4'),
+('CELERY', 'C4'),
+('ASPARAGUS', 'C4'),
+('ZUCCHINI', 'C4'),
+('OKRA', 'C4'),
+('COURGETTE', 'C4'),
+('ARTICHOKE', 'C4'),
+('LEEK', 'C4'),
+('SHALLOT', 'C4'),
+('SCALLION', 'C4'),
+('PARSNIP', 'C4'),
+('KALE', 'C4'),
+('CHARD', 'C4'),
+('MUSHROOM', 'C4'),
+('SWEETCORN', 'C4'),
+('COLOCASIA', 'C4'),
+('DRUMSTICK', 'C4'),
+('BITTERGOURD', 'C4'),
+('BOTTLEGOURD', 'C4'),
+('RIDGEGOURD', 'C4'),
+('SNAKEGOURD', 'C4'),
+('ASHGOURD', 'C4'),
+('FENUGREEK', 'C4'),
+('CORIANDER', 'C4'),
+('MUSTARD', 'C4'),
+('CHILLI', 'C4'),
+('PEPPER', 'C4'),
+('SPROUTS', 'C4'),
+('TAPIOCA', 'C4'),
+('AMARANTH', 'C4');
+
+-- C5 : Capitals (50)
 INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('DELHI', 'C5'),
 ('TOKYO', 'C5'),
@@ -70,4 +257,47 @@ INSERT INTO Words_in_Category (Word, Category_Id) VALUES
 ('BERLIN', 'C5'),
 ('ROME', 'C5'),
 ('MOSCOW', 'C5'),
-('LONDON', 'C5');
+('LONDON', 'C5'),
+('MADRID', 'C5'),
+('LISBON', 'C5'),
+('ATHENS', 'C5'),
+('VIENNA', 'C5'),
+('BRUSSELS', 'C5'),
+('AMSTERDAM', 'C5'),
+('COPENHAGEN', 'C5'),
+('STOCKHOLM', 'C5'),
+('HELSINKI', 'C5'),
+('OSLO', 'C5'),
+('DUBLIN', 'C5'),
+('WARSAW', 'C5'),
+('BUDAPEST', 'C5'),
+('PRAGUE', 'C5'),
+('BEIJING', 'C5'),
+('SEOUL', 'C5'),
+('BANGKOK', 'C5'),
+('JAKARTA', 'C5'),
+('MANILA', 'C5'),
+('HANOI', 'C5'),
+('KATHMANDU', 'C5'),
+('THIMPHU', 'C5'),
+('COLOMBO', 'C5'),
+('DHAKA', 'C5'),
+('ISLAMABAD', 'C5'),
+('TEHRAN', 'C5'),
+('ANKARA', 'C5'),
+('NAIROBI', 'C5'),
+('PRETORIA', 'C5'),
+('ALGIERS', 'C5'),
+('RABAT', 'C5'),
+('ACCRA', 'C5'),
+('KAMPALA', 'C5'),
+('BRASILIA', 'C5'),
+('SANTIAGO', 'C5'),
+('BOGOTA', 'C5'),
+('QUITO', 'C5'),
+('HAVANA', 'C5'),
+('WELLINGTON', 'C5'),
+('ULAANBAATAR', 'C5');
+
+-- Words are always looked up by category, so index that column.
+CREATE INDEX idx_words_category ON Words_in_Category (Category_Id);

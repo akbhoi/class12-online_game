@@ -1,0 +1,8 @@
+name = "class-xii-hangman"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "class12_online_game"
+database_id = "44093663-bc13-4a3f-8bb1-9797d79d4482"

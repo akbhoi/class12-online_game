@@ -34,12 +34,44 @@
         color: #6b7280; /* text-gray-500 */
         cursor: not-allowed;
       }
-      .hangman-part {
-        stroke: #cbd5e1; /* slate-300 */
-        stroke-width: 4;
-        fill: none;
-        stroke-linecap: round;
-        display: none; /* Hidden by default */
+
+      /* --- Rocket-to-the-Moon progress illustration --- */
+      #rocket-group {
+        transition: transform 400ms ease-in-out;
+      }
+      #rocket-flame {
+        transform-origin: center;
+        transition: opacity 200ms ease-in-out;
+        opacity: 0;
+      }
+      #rocket-flame.firing {
+        opacity: 1;
+        animation: flame-flicker 300ms ease-in-out infinite alternate;
+      }
+      .fuel-cell {
+        transition: opacity 300ms ease-in-out, fill 300ms ease-in-out;
+      }
+      .fuel-cell.spent {
+        opacity: 0.25;
+      }
+      @keyframes flame-flicker {
+        from {
+          transform: scaleY(1);
+        }
+        to {
+          transform: scaleY(1.25);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #rocket-group {
+          transition: none;
+        }
+        #rocket-flame {
+          animation: none;
+        }
+        .fuel-cell {
+          transition: none;
+        }
       }
     </style>
   </head>
@@ -47,92 +79,75 @@
     class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4"
   >
     <div
-      class="w-full max-w-3xl mx-auto flex flex-col lg:flex-row gap-8 items-center justify-center"
+      class="w-full max-w-3xl mx-auto flex flex-col lg:flex-row gap-8 items-center justify-center relative"
     >
-      <!-- Hangman Drawing -->
-      <div class="w-full max-w-xs lg:w-1/3">
-        <svg viewBox="0 0 200 250" class="w-full">
-          <!-- Gallow -->
-          <line
-            x1="10"
-            y1="230"
-            x2="190"
-            y2="230"
-            class="hangman-part"
-            style="display: block; stroke: #475569"
-          />
-          <!-- base -->
-          <line
-            x1="50"
-            y1="230"
-            x2="50"
-            y2="20"
-            class="hangman-part"
-            style="display: block; stroke: #475569"
-          />
-          <!-- pole -->
-          <line
-            x1="50"
-            y1="20"
-            x2="150"
-            y2="20"
-            class="hangman-part"
-            style="display: block; stroke: #475569"
-          />
-          <!-- beam -->
-          <line
-            x1="150"
-            y1="20"
-            x2="150"
-            y2="50"
-            class="hangman-part"
-            style="display: block; stroke: #475569"
-          />
-          <!-- rope -->
+      <!-- Loading overlay -->
+      <div
+        id="loading-game"
+        class="absolute inset-0 bg-gray-900/90 flex items-center justify-center rounded-xl z-10"
+      >
+        <p class="text-gray-400 text-xl">Loading your game...</p>
+      </div>
 
-          <!-- Body Parts -->
-          <circle cx="150" cy="70" r="20" id="head" class="hangman-part" />
-          <line
-            x1="150"
-            y1="90"
-            x2="150"
-            y2="150"
-            id="body"
-            class="hangman-part"
-          />
-          <line
-            x1="150"
-            y1="110"
-            x2="120"
-            y2="140"
-            id="left-arm"
-            class="hangman-part"
-          />
-          <line
-            x1="150"
-            y1="110"
-            x2="180"
-            y2="140"
-            id="right-arm"
-            class="hangman-part"
-          />
-          <line
-            x1="150"
-            y1="150"
-            x2="120"
-            y2="180"
-            id="left-leg"
-            class="hangman-part"
-          />
-          <line
-            x1="150"
-            y1="150"
-            x2="180"
-            y2="180"
-            id="right-leg"
-            class="hangman-part"
-          />
+      <!-- Rocket-to-the-Moon Illustration -->
+      <div class="w-full max-w-xs lg:w-1/3">
+        <svg viewBox="0 0 200 260" class="w-full" aria-hidden="true">
+          <!-- Night sky -->
+          <rect x="0" y="0" width="200" height="260" rx="12" fill="#0f172a" />
+          <circle cx="30" cy="30" r="1.5" fill="#e2e8f0" />
+          <circle cx="60" cy="55" r="1" fill="#e2e8f0" />
+          <circle cx="170" cy="40" r="1.5" fill="#e2e8f0" />
+          <circle cx="145" cy="75" r="1" fill="#e2e8f0" />
+          <circle cx="25" cy="100" r="1" fill="#e2e8f0" />
+          <circle cx="180" cy="110" r="1" fill="#e2e8f0" />
+          <circle cx="95" cy="35" r="1" fill="#e2e8f0" />
+
+          <!-- Moon (the goal) -->
+          <circle cx="100" cy="35" r="22" fill="#fde68a" />
+          <circle cx="92" cy="27" r="4" fill="#fbbf24" opacity="0.6" />
+          <circle cx="108" cy="42" r="3" fill="#fbbf24" opacity="0.6" />
+          <circle cx="98" cy="45" r="2" fill="#fbbf24" opacity="0.6" />
+
+          <!-- Fuel gauge: 7 cells, one dims per wrong guess -->
+          <g id="fuel-gauge">
+            <!-- cells stacked bottom-up; JS toggles the "spent" class -->
+          </g>
+
+          <!-- Launch pad -->
+          <rect x="70" y="230" width="60" height="10" rx="2" fill="#334155" />
+
+          <!-- Rocket (its vertical position is animated via transform) -->
+          <g id="rocket-group" transform="translate(0, 0)">
+            <g transform="translate(100, 210)">
+              <!-- flame -->
+              <path
+                id="rocket-flame"
+                d="M -6 22 Q 0 40 6 22 Q 0 30 -6 22 Z"
+                fill="#f97316"
+              />
+              <!-- fins -->
+              <path d="M -10 10 L -18 24 L -10 20 Z" fill="#38bdf8" />
+              <path d="M 10 10 L 18 24 L 10 20 Z" fill="#38bdf8" />
+              <!-- body -->
+              <rect
+                x="-10"
+                y="-18"
+                width="20"
+                height="40"
+                rx="10"
+                fill="#e2e8f0"
+              />
+              <!-- nose cone -->
+              <path d="M -10 -18 Q 0 -34 10 -18 Z" fill="#f87171" />
+              <!-- window -->
+              <circle cx="0" cy="-4" r="5" fill="#38bdf8" />
+            </g>
+          </g>
         </svg>
+        <p
+          id="rocket-caption"
+          class="text-center text-sm text-gray-400 mt-2 h-5"
+        ></p>
       </div>
 
       <!-- Game Info -->
@@ -161,7 +176,7 @@
     <!-- Modal for Game Over -->
     <div
       id="modal"
-      class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden"
+      class="fixed inset-0 bg-black/75 flex items-center justify-center hidden"
     >
       <div class="bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
         <h2 id="modal-title" class="text-3xl font-bold mb-4"></h2>
@@ -180,10 +195,6 @@
       </div>
     </div>
 
-    <div id="loading-game" class="text-center">
-      <p class="text-gray-500 text-xl">Loading your game...</p>
-    </div>
-
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         // --- DOM Elements ---
@@ -196,13 +207,44 @@
         const modalTitleEl = document.getElementById("modal-title");
         const modalTextEl = document.getElementById("modal-text");
         const playAgainBtn = document.getElementById("play-again-btn");
-        const hangmanParts = document.querySelectorAll(".hangman-part");
+        const rocketGroupEl = document.getElementById("rocket-group");
+        const rocketFlameEl = document.getElementById("rocket-flame");
+        const rocketCaptionEl = document.getElementById("rocket-caption");
+        const fuelGaugeEl = document.getElementById("fuel-gauge");
 
         // --- Game State ---
         let wordToGuess = "";
         let guessedLetters = [];
         let incorrectGuesses = [];
-        const maxMistakes = 6; // Head, body, 2 arms, 2 legs
+        let wordQueue = []; // words fetched from the API but not yet played this session
+        let currentCategoryId = null;
+        const maxMistakes = 7; // matches the case study's "seven chances"
+        const WORDS_PER_FETCH = 15;
+
+        // --- Fuel gauge setup (7 cells, drawn once) ---
+        const FUEL_CELL_COUNT = maxMistakes;
+        const buildFuelGauge = () => {
+          fuelGaugeEl.innerHTML = "";
+          const cellWidth = 10;
+          const cellHeight = 14;
+          const gap = 4;
+          const startY = 205 - FUEL_CELL_COUNT * (cellHeight + gap);
+          for (let i = 0; i < FUEL_CELL_COUNT; i++) {
+            const rect = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "rect"
+            );
+            rect.setAttribute("x", "20");
+            rect.setAttribute("y", startY + i * (cellHeight + gap));
+            rect.setAttribute("width", cellWidth);
+            rect.setAttribute("height", cellHeight);
+            rect.setAttribute("rx", "2");
+            rect.setAttribute("fill", "#34d399");
+            rect.classList.add("fuel-cell");
+            rect.dataset.index = String(i);
+            fuelGaugeEl.appendChild(rect);
+          }
+        };
 
         // --- Functions ---
 
@@ -217,22 +259,22 @@
           return { categoryId, categoryName };
         };
 
-        // Fetch a new word
-        const fetchWord = async (categoryId) => {
-          let response; // Define response here to access it in catch block
+        // Fetch a batch of words for the category and refill the in-memory queue
+        const fetchWords = async (categoryId) => {
+          let response;
           try {
-            response = await fetch(`/api/word/${categoryId}`);
+            response = await fetch(
+              `/api/words/${categoryId}?count=${WORDS_PER_FETCH}`
+            );
             if (!response.ok) {
-              // If response is not OK, throw an error to be caught below
               throw new Error(
                 `Network response was not ok: ${response.statusText}`
               );
             }
             const data = await response.json();
-            return data.Word.toUpperCase();
+            return (data.words || []).map((w) => w.toUpperCase());
           } catch (error) {
-            console.error("Error fetching or parsing word:", error);
-            // If an error occurs, try to read the response as text for debugging
+            console.error("Error fetching or parsing words:", error);
             if (response) {
               const errorText = await response.text();
               console.error("API Response Text:", errorText);
@@ -240,8 +282,16 @@
             } else {
               wordDisplayEl.textContent = "Network Error. Check console.";
             }
-            return null;
+            return [];
           }
+        };
+
+        // Get the next word to play, refilling the queue from the API if empty
+        const nextWord = async (categoryId) => {
+          if (wordQueue.length === 0) {
+            wordQueue = await fetchWords(categoryId);
+          }
+          return wordQueue.shift() || null;
         };
 
         // Render the keyboard
@@ -251,6 +301,7 @@
             const button = document.createElement("button");
             button.textContent = letter;
             button.className = "keyboard-btn";
+            button.dataset.letter = letter;
             button.addEventListener("click", () => handleGuess(letter));
             keyboardEl.appendChild(button);
           });
@@ -264,43 +315,65 @@
               if (letter === " ") return " ";
               return guessedLetters.includes(letter) ? letter : "_";
             })
-            .join("");
+            .join(" ");
           wordDisplayEl.textContent = display;
           return display;
         };
 
-        // Update the hangman drawing
-        const updateHangmanDrawing = () => {
-          const bodyParts = [
-            "head",
-            "body",
-            "left-arm",
-            "right-arm",
-            "left-leg",
-            "right-leg",
-          ];
-          bodyParts.forEach((part, index) => {
-            const el = document.getElementById(part);
-            if (el) {
-              el.style.display =
-                incorrectGuesses.length > index ? "block" : "none";
-            }
+        // Update the rocket illustration to reflect current progress
+        const updateRocket = (revealedFraction, missCount) => {
+          // Rocket climbs from the pad (0) toward the Moon (1) as letters are revealed.
+          const maxLift = 175; // px of vertical travel from pad to Moon
+          const lift = Math.min(revealedFraction, 1) * maxLift;
+          rocketGroupEl.setAttribute(
+            "transform",
+            `translate(0, -${lift.toFixed(1)})`
+          );
+          rocketFlameEl.classList.toggle(
+            "firing",
+            revealedFraction > 0 && revealedFraction < 1
+          );
+
+          // Dim one fuel cell per wrong guess, counting from the top of the stack.
+          const cells = fuelGaugeEl.querySelectorAll(".fuel-cell");
+          cells.forEach((cell) => {
+            const index = Number(cell.dataset.index);
+            const dim = index >= FUEL_CELL_COUNT - missCount;
+            cell.classList.toggle("spent", dim);
           });
+
+          if (missCount >= maxMistakes) {
+            rocketCaptionEl.textContent = "Out of fuel";
+          } else if (revealedFraction >= 1) {
+            rocketCaptionEl.textContent = "Docked at the Moon!";
+          } else {
+            rocketCaptionEl.textContent = "";
+          }
+        };
+
+        // Fraction of distinct letters in the word that have been guessed
+        const revealedFraction = () => {
+          const letters = new Set(
+            wordToGuess.split("").filter((l) => l !== " ")
+          );
+          if (letters.size === 0) return 0;
+          let revealed = 0;
+          letters.forEach((l) => {
+            if (guessedLetters.includes(l)) revealed++;
+          });
+          return revealed / letters.size;
         };
 
         // Handle a letter guess
         const handleGuess = (letter) => {
+          if (!modalEl.classList.contains("hidden")) return;
           if (guessedLetters.includes(letter) || !wordToGuess) return;
 
           guessedLetters.push(letter);
 
           // Disable the guessed letter button
-          const buttons = keyboardEl.getElementsByTagName("button");
-          for (let btn of buttons) {
-            if (btn.textContent === letter) {
-              btn.disabled = true;
-            }
-          }
+          const btn = keyboardEl.querySelector(`[data-letter="${letter}"]`);
+          if (btn) btn.disabled = true;
 
           if (wordToGuess.includes(letter)) {
             // Correct guess
@@ -309,9 +382,9 @@
             // Incorrect guess
             incorrectGuesses.push(letter);
             missesDisplayEl.textContent = incorrectGuesses.join(", ");
-            updateHangmanDrawing();
           }
 
+          updateRocket(revealedFraction(), incorrectGuesses.length);
           checkGameOver();
         };
 
@@ -350,17 +423,19 @@
 
         // Initialize a new game
         const initGame = async () => {
-          loadingGameEl.style.display = "block";
+          loadingGameEl.classList.remove("hidden");
           modalEl.classList.add("hidden");
           wordDisplayEl.textContent = "";
+          rocketCaptionEl.textContent = "";
 
           const { categoryId, categoryName } = getCategoryFromURL();
+          currentCategoryId = categoryId;
           categoryNameEl.textContent = decodeURIComponent(categoryName);
 
-          wordToGuess = await fetchWord(categoryId);
-          // If fetchWord returns null (due to an error), stop the game initialization
+          wordToGuess = await nextWord(categoryId);
+          // If nextWord returns null (due to an error), stop the game initialization
           if (!wordToGuess) {
-            loadingGameEl.style.display = "none";
+            loadingGameEl.classList.add("hidden");
             return;
           }
 
@@ -370,13 +445,21 @@
           renderKeyboard();
           renderWordDisplay();
           missesDisplayEl.textContent = "";
-          updateHangmanDrawing();
+          buildFuelGauge();
+          updateRocket(0, 0);
 
-          loadingGameEl.style.display = "none";
+          loadingGameEl.classList.add("hidden");
         };
 
         // --- Event Listeners ---
         playAgainBtn.addEventListener("click", initGame);
+
+        document.addEventListener("keydown", (event) => {
+          const letter = event.key.toUpperCase();
+          if (letter.length === 1 && letter >= "A" && letter <= "Z") {
+            handleGuess(letter);
+          }
+        });
 
         // --- Start Game ---
         initGame();
