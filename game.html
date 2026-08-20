@@ -166,10 +166,7 @@
           Misses:
           <span id="misses-display" class="text-red-400 font-semibold"></span>
         </p>
-        <div
-          id="keyboard"
-          class="grid grid-cols-7 md:grid-cols-9 gap-2 mt-8"
-        ></div>
+        <div id="keyboard" class="flex flex-col gap-2 mt-8 items-center lg:items-start"></div>
       </div>
     </div>
 
@@ -294,16 +291,25 @@
           return wordQueue.shift() || null;
         };
 
-        // Render the keyboard
+        // Render the keyboard in the standard QWERTY layout, so students
+        // build real typing-keyboard muscle memory while they play.
+        const QWERTY_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
         const renderKeyboard = () => {
           keyboardEl.innerHTML = "";
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((letter) => {
-            const button = document.createElement("button");
-            button.textContent = letter;
-            button.className = "keyboard-btn";
-            button.dataset.letter = letter;
-            button.addEventListener("click", () => handleGuess(letter));
-            keyboardEl.appendChild(button);
+          QWERTY_ROWS.forEach((row, rowIndex) => {
+            const rowEl = document.createElement("div");
+            rowEl.className = `flex gap-2 ${
+              rowIndex === 1 ? "ml-4 md:ml-6" : rowIndex === 2 ? "ml-8 md:ml-12" : ""
+            }`;
+            row.split("").forEach((letter) => {
+              const button = document.createElement("button");
+              button.textContent = letter;
+              button.className = "keyboard-btn w-9 md:w-11";
+              button.dataset.letter = letter;
+              button.addEventListener("click", () => handleGuess(letter));
+              rowEl.appendChild(button);
+            });
+            keyboardEl.appendChild(rowEl);
           });
         };
 
