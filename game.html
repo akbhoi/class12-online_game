@@ -1,367 +1,833 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hangman Game</title>
+    <title>Cosmic Hangman - Game Arena</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
+      :root {
+        --font-heading: "Outfit", sans-serif;
+        --font-body: "Plus Jakarta Sans", sans-serif;
+      }
       body {
-        font-family: "Inter", sans-serif;
+        font-family: var(--font-body);
+        background-color: #030712; /* Slate-950 */
       }
+      h1, h2, h3 {
+        font-family: var(--font-heading);
+      }
+      .cosmic-gradient {
+        background: radial-gradient(circle at 50% 15%, rgba(6, 182, 212, 0.12), transparent 55%),
+                    radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.1), transparent 50%),
+                    radial-gradient(circle at 15% 75%, rgba(236, 72, 153, 0.08), transparent 50%);
+      }
+      .glass-panel {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      
+      /* --- Fluid Keyboard Buttons --- */
       .keyboard-btn {
-        background-color: #4b5563; /* bg-gray-600 */
-        color: #ffffff; /* text-white */
-        font-weight: 700; /* font-bold */
-        padding: 0.75rem 1rem; /* py-3 px-4 */
-        border-radius: 0.5rem; /* rounded-lg */
-        text-align: center; /* text-center */
-        transition-property: background-color;
-        transition-duration: 200ms;
-        transition-timing-function: ease-in-out;
+        flex: 1 1 0px;
+        min-width: 26px;
+        max-width: 44px;
+        height: 46px;
+        background-color: rgba(30, 41, 59, 0.85);
+        color: #f8fafc;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+        touch-action: manipulation;
       }
-      .keyboard-btn:hover {
-        background-color: #6b7280; /* hover:bg-gray-500 */
+      @media (min-width: 640px) {
+        .keyboard-btn {
+          min-width: 34px;
+          max-width: 48px;
+          height: 50px;
+          font-size: 1.1rem;
+        }
       }
-      .keyboard-btn:disabled {
-        background-color: #1f2937; /* bg-gray-800 */
-        color: #6b7280; /* text-gray-500 */
+      .keyboard-btn:hover:not(:disabled) {
+        background-color: rgba(51, 65, 85, 0.95);
+        border-color: rgba(6, 182, 212, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+      }
+      .keyboard-btn:active:not(:disabled) {
+        transform: translateY(0) scale(0.95);
+      }
+      .keyboard-btn.correct-guess {
+        background-color: rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+        color: #6ee7b7;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        cursor: not-allowed;
+      }
+      .keyboard-btn.wrong-guess {
+        background-color: rgba(15, 23, 42, 0.6);
+        border-color: rgba(244, 63, 94, 0.3);
+        color: rgba(244, 63, 94, 0.45);
+        text-decoration: line-through;
         cursor: not-allowed;
       }
 
-      /* --- Rocket-to-the-Moon progress illustration --- */
+      /* --- Accessible Letter Slots --- */
+      .letter-slot {
+        width: 2.2rem;
+        height: 3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        font-weight: 800;
+        border-bottom: 3px solid rgba(6, 182, 212, 0.6);
+        background: rgba(30, 41, 59, 0.5);
+        border-radius: 0.375rem 0.375rem 0 0;
+        transition: all 250ms ease;
+      }
+      @media (min-width: 640px) {
+        .letter-slot {
+          width: 3rem;
+          height: 3.75rem;
+          font-size: 2rem;
+          border-bottom-width: 4px;
+        }
+      }
+      .letter-slot.revealed {
+        border-bottom-color: #10b981;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        animation: tile-pop 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .letter-slot.space-slot {
+        width: 1rem;
+        border-bottom: none;
+        background: transparent;
+      }
+
+      @keyframes tile-pop {
+        0% { transform: scale(0.6); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      /* --- Rocket Illustration Animations --- */
       #rocket-group {
-        transition: transform 400ms ease-in-out;
+        transition: transform 500ms cubic-bezier(0.34, 1.25, 0.64, 1);
       }
       #rocket-flame {
-        transform-origin: center;
+        transform-origin: center top;
         transition: opacity 200ms ease-in-out;
         opacity: 0;
       }
       #rocket-flame.firing {
         opacity: 1;
-        animation: flame-flicker 300ms ease-in-out infinite alternate;
+        animation: flame-flicker 200ms ease-in-out infinite alternate;
       }
       .fuel-cell {
         transition: opacity 300ms ease-in-out, fill 300ms ease-in-out;
       }
       .fuel-cell.spent {
-        opacity: 0.25;
+        opacity: 0.2;
+        fill: #475569;
       }
+      .fuel-cell.critical {
+        animation: pulse-crit 800ms infinite alternate;
+      }
+
       @keyframes flame-flicker {
-        from {
-          transform: scaleY(1);
-        }
-        to {
-          transform: scaleY(1.25);
-        }
+        from { transform: scaleY(0.9) scaleX(0.9); }
+        to { transform: scaleY(1.3) scaleX(1.1); }
       }
+      @keyframes pulse-crit {
+        from { opacity: 0.6; fill: #fb7185; }
+        to { opacity: 1; fill: #f43f5e; }
+      }
+
+      /* --- Screen Shake on Wrong Guess --- */
+      .shake-wrong {
+        animation: shake 350ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      }
+      @keyframes shake {
+        10%, 90% { transform: translate3d(-2px, 0, 0); }
+        20%, 80% { transform: translate3d(3px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+        40%, 60% { transform: translate3d(3px, 0, 0); }
+      }
+
+      /* --- High Contrast Focus Rings --- */
+      button:focus-visible, a:focus-visible {
+        outline: 2px solid #06b6d4;
+        outline-offset: 3px;
+        box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.3);
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        #rocket-group {
+        #rocket-group, #rocket-flame, .letter-slot, .shake-wrong {
           transition: none;
-        }
-        #rocket-flame {
           animation: none;
-        }
-        .fuel-cell {
-          transition: none;
         }
       }
     </style>
   </head>
-  <body
-    class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4"
-  >
-    <div
-      class="w-full max-w-3xl mx-auto flex flex-col lg:flex-row gap-8 items-center justify-center relative"
-    >
-      <!-- Loading overlay -->
-      <div
-        id="loading-game"
-        class="absolute inset-0 bg-gray-900/90 flex items-center justify-center rounded-xl z-10"
-      >
-        <p class="text-gray-400 text-xl">Loading your game...</p>
-      </div>
+  <body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-3 sm:p-4 cosmic-gradient selection:bg-cyan-500 selection:text-slate-900">
+    <!-- Screen Reader Live Status Announcer (WCAG 2.2 AA) -->
+    <div id="sr-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Rocket-to-the-Moon Illustration -->
-      <div class="w-full max-w-xs lg:w-1/3">
-        <svg viewBox="0 0 200 260" class="w-full" aria-hidden="true">
-          <!-- Night sky -->
-          <rect x="0" y="0" width="200" height="260" rx="12" fill="#0f172a" />
-          <circle cx="30" cy="30" r="1.5" fill="#e2e8f0" />
-          <circle cx="60" cy="55" r="1" fill="#e2e8f0" />
-          <circle cx="170" cy="40" r="1.5" fill="#e2e8f0" />
-          <circle cx="145" cy="75" r="1" fill="#e2e8f0" />
-          <circle cx="25" cy="100" r="1" fill="#e2e8f0" />
-          <circle cx="180" cy="110" r="1" fill="#e2e8f0" />
-          <circle cx="95" cy="35" r="1" fill="#e2e8f0" />
+    <!-- Canvas Confetti Overlay -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
-          <!-- Moon (the goal) -->
-          <circle cx="100" cy="35" r="22" fill="#fde68a" />
-          <circle cx="92" cy="27" r="4" fill="#fbbf24" opacity="0.6" />
-          <circle cx="108" cy="42" r="3" fill="#fbbf24" opacity="0.6" />
-          <circle cx="98" cy="45" r="2" fill="#fbbf24" opacity="0.6" />
+    <!-- Starfield Background -->
+    <div class="fixed inset-0 pointer-events-none opacity-40 overflow-hidden" aria-hidden="true">
+      <div class="absolute top-1/4 left-1/6 w-1 h-1 bg-cyan-300 rounded-full animate-ping"></div>
+      <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-indigo-300 rounded-full animate-pulse"></div>
+      <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white rounded-full"></div>
+      <div class="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-pink-300 rounded-full animate-pulse"></div>
+    </div>
 
-          <!-- Fuel gauge: 7 cells, one dims per wrong guess -->
-          <g id="fuel-gauge">
-            <!-- cells stacked bottom-up; JS toggles the "spent" class -->
-          </g>
+    <!-- Main Game Container -->
+    <main class="w-full max-w-4xl z-10 my-4" id="game-arena">
+      <div class="glass-panel p-4 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+        <!-- Ambient Radial Glow -->
+        <div class="absolute -top-28 left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
 
-          <!-- Launch pad -->
-          <rect x="70" y="230" width="60" height="10" rx="2" fill="#334155" />
-
-          <!-- Rocket (its vertical position is animated via transform) -->
-          <g id="rocket-group" transform="translate(0, 0)">
-            <g transform="translate(100, 210)">
-              <!-- flame -->
-              <path
-                id="rocket-flame"
-                d="M -6 22 Q 0 40 6 22 Q 0 30 -6 22 Z"
-                fill="#f97316"
-              />
-              <!-- fins -->
-              <path d="M -10 10 L -18 24 L -10 20 Z" fill="#38bdf8" />
-              <path d="M 10 10 L 18 24 L 10 20 Z" fill="#38bdf8" />
-              <!-- body -->
-              <rect
-                x="-10"
-                y="-18"
-                width="20"
-                height="40"
-                rx="10"
-                fill="#e2e8f0"
-              />
-              <!-- nose cone -->
-              <path d="M -10 -18 Q 0 -34 10 -18 Z" fill="#f87171" />
-              <!-- window -->
-              <circle cx="0" cy="-4" r="5" fill="#38bdf8" />
-            </g>
-          </g>
-        </svg>
-        <p
-          id="rocket-caption"
-          class="text-center text-sm text-gray-400 mt-2 h-5"
-        ></p>
-      </div>
-
-      <!-- Game Info -->
-      <div class="w-full lg:w-2/3 text-center lg:text-left">
-        <p class="text-lg text-gray-400">
-          Category:
-          <span id="category-name" class="font-semibold text-cyan-400"
-            >Loading...</span
+        <!-- Top Navigation & Controls Bar -->
+        <header class="flex items-center justify-between pb-4 sm:pb-6 border-b border-slate-800/80 mb-6 gap-2">
+          <a
+            href="index.html"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition duration-200 border border-slate-700/60"
+            aria-label="Back to Category Selection"
           >
-        </p>
-        <h1
-          id="word-display"
-          class="text-4xl md:text-5xl font-bold my-6 tracking-widest"
-        ></h1>
-        <p class="text-md text-gray-400 mb-4">
-          Misses:
-          <span id="misses-display" class="text-red-400 font-semibold"></span>
-        </p>
-        <div id="keyboard" class="flex flex-col gap-2 mt-8 items-center lg:items-start"></div>
-      </div>
-    </div>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Categories</span>
+          </a>
 
-    <!-- Modal for Game Over -->
-    <div
-      id="modal"
-      class="fixed inset-0 bg-black/75 flex items-center justify-center hidden"
-    >
-      <div class="bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
-        <h2 id="modal-title" class="text-3xl font-bold mb-4"></h2>
-        <p id="modal-text" class="mb-6"></p>
-        <button
-          id="play-again-btn"
-          class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+          <!-- Center: Category Badge -->
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs sm:text-sm font-semibold">
+            <span id="category-icon" aria-hidden="true">🚀</span>
+            <span id="category-name">Loading...</span>
+          </div>
+
+          <!-- Right: Streak & Sound Controls -->
+          <div class="flex items-center gap-2">
+            <div class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300" title="Win Streak">
+              <span class="text-amber-400">🔥</span>
+              <strong id="streak-counter" class="text-white">0</strong>
+            </div>
+
+            <button
+              id="sound-toggle-btn"
+              type="button"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 flex items-center justify-center text-sm transition"
+              aria-label="Toggle Sound Effects"
+              title="Toggle Sound Effects"
+            >
+              <span id="sound-icon">🔊</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Loading Overlay -->
+        <div
+          id="loading-game"
+          class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl z-20 transition-opacity duration-300"
         >
-          Play Again
-        </button>
-        <a
-          href="index.html"
-          class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ml-4"
-          >Change Category</a
-        >
+          <div class="w-12 h-12 border-3 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin mb-4"></div>
+          <p class="text-slate-300 text-sm font-semibold tracking-wide">Preparing Rocket Mission...</p>
+        </div>
+
+        <!-- Main Gameplay Arena: Split Columns on Desktop -->
+        <div class="flex flex-col lg:flex-row gap-6 sm:gap-10 items-center justify-center">
+          
+          <!-- LEFT COLUMN: Rocket-to-the-Moon Progress Gauge -->
+          <div class="w-full max-w-[240px] sm:max-w-xs lg:w-1/3 flex flex-col items-center">
+            <div class="w-full relative rounded-2xl p-2 bg-slate-950/60 border border-slate-800/80 shadow-inner">
+              <svg viewBox="0 0 200 260" class="w-full rounded-xl" aria-hidden="true">
+                <defs>
+                  <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#020617" />
+                    <stop offset="100%" stop-color="#0f172a" />
+                  </linearGradient>
+                  <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fef08a" stop-opacity="1" />
+                    <stop offset="80%" stop-color="#fde047" stop-opacity="0.8" />
+                    <stop offset="100%" stop-color="#eab308" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+
+                <!-- Deep Space Night sky -->
+                <rect x="0" y="0" width="200" height="260" rx="10" fill="url(#skyGrad)" />
+                <circle cx="30" cy="30" r="1.5" fill="#e2e8f0" opacity="0.8" />
+                <circle cx="60" cy="55" r="1" fill="#e2e8f0" opacity="0.6" />
+                <circle cx="170" cy="40" r="1.5" fill="#e2e8f0" opacity="0.9" />
+                <circle cx="145" cy="75" r="1" fill="#e2e8f0" opacity="0.5" />
+                <circle cx="25" cy="100" r="1" fill="#e2e8f0" opacity="0.7" />
+                <circle cx="180" cy="110" r="1" fill="#e2e8f0" opacity="0.8" />
+                <circle cx="95" cy="35" r="1" fill="#e2e8f0" opacity="0.6" />
+
+                <!-- Moon (Goal Destination) with ambient glow -->
+                <circle cx="100" cy="35" r="26" fill="url(#moonGlow)" />
+                <circle cx="100" cy="35" r="22" fill="#fef08a" />
+                <circle cx="92" cy="27" r="4" fill="#fbbf24" opacity="0.5" />
+                <circle cx="108" cy="42" r="3.5" fill="#fbbf24" opacity="0.5" />
+                <circle cx="98" cy="45" r="2" fill="#fbbf24" opacity="0.5" />
+
+                <!-- Fuel Gauge: 7 cells stacked vertically with dynamic fuel colors -->
+                <g id="fuel-gauge">
+                  <!-- Generated dynamically in JavaScript -->
+                </g>
+
+                <!-- Launch Pad Platform -->
+                <rect x="70" y="230" width="60" height="10" rx="3" fill="#334155" />
+
+                <!-- Animated Rocket Group -->
+                <g id="rocket-group" transform="translate(0, 0)">
+                  <g transform="translate(100, 210)">
+                    <!-- Thruster Flame -->
+                    <path
+                      id="rocket-flame"
+                      d="M -6 22 Q 0 42 6 22 Q 0 32 -6 22 Z"
+                      fill="#f97316"
+                    />
+                    <!-- Fins -->
+                    <path d="M -10 10 L -18 24 L -10 20 Z" fill="#0284c7" />
+                    <path d="M 10 10 L 18 24 L 10 20 Z" fill="#0284c7" />
+                    <!-- Body Capsule -->
+                    <rect
+                      x="-10"
+                      y="-18"
+                      width="20"
+                      height="40"
+                      rx="10"
+                      fill="#f1f5f9"
+                    />
+                    <!-- Nose Cone -->
+                    <path d="M -10 -18 Q 0 -34 10 -18 Z" fill="#f43f5e" />
+                    <!-- Window Porthole -->
+                    <circle cx="0" cy="-4" r="5.5" fill="#0284c7" />
+                    <circle cx="-1.5" cy="-5.5" r="1.5" fill="#ffffff" opacity="0.8" />
+                  </g>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Rocket Status Caption -->
+            <div class="mt-2 text-center">
+              <span id="rocket-caption" class="text-xs font-semibold text-cyan-300 h-5 block">
+                Mission Ready • 7 Attempts
+              </span>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Secret Word & QWERTY Keyboard -->
+          <div class="w-full lg:w-2/3 flex flex-col items-center lg:items-start text-center lg:text-left">
+            
+            <!-- Misses & Chances Stats -->
+            <div class="w-full flex items-center justify-between text-xs sm:text-sm text-slate-400 mb-2">
+              <span class="flex items-center gap-1">
+                <span>Mistakes:</span>
+                <span id="misses-display" class="font-bold text-rose-400 tracking-wider">None</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span>Chances Left:</span>
+                <span id="chances-display" class="font-bold text-emerald-400">7 / 7</span>
+              </span>
+            </div>
+
+            <!-- Accessible Secret Word Display Tiles -->
+            <div
+              id="word-display"
+              class="flex flex-wrap gap-1.5 sm:gap-2.5 justify-center lg:justify-start my-4 sm:my-6 min-h-[3.5rem] sm:min-h-[4.25rem] items-center"
+            >
+              <!-- Populated dynamically with .letter-slot elements -->
+            </div>
+
+            <!-- Virtual QWERTY Keyboard -->
+            <div class="w-full mt-4 sm:mt-6">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2 text-center lg:text-left">
+                On-Screen / Physical Keyboard
+              </div>
+              <div id="keyboard" class="flex flex-col gap-1.5 sm:gap-2 w-full max-w-md mx-auto lg:mx-0">
+                <!-- 3 QWERTY Rows Generated Dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
+
+    <!-- Accessible Game Over Modal Dialog (<dialog>) -->
+    <dialog
+      id="game-modal"
+      class="p-0 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 shadow-2xl backdrop:bg-slate-950/80 backdrop:backdrop-blur-sm max-w-sm w-full mx-auto"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-text"
+    >
+      <div class="p-6 sm:p-8 text-center relative overflow-hidden">
+        <!-- Top Accent Gradient -->
+        <div id="modal-glow" class="absolute -top-16 left-1/2 -translate-x-1/2 w-36 h-36 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true"></div>
+
+        <!-- Result Badge Icon -->
+        <div id="modal-icon" class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-3xl mb-4">
+          🎉
+        </div>
+
+        <h2 id="modal-title" class="text-2xl sm:text-3xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-400">
+          Mission Accomplished!
+        </h2>
+        
+        <p id="modal-text" class="text-slate-300 text-sm mb-4">
+          You safely docked at the Moon!
+        </p>
+
+        <!-- Revealed Word Card -->
+        <div class="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/60 mb-6 text-left">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Target Word</div>
+          <div id="modal-word-reveal" class="text-xl font-extrabold text-cyan-300 tracking-widest mt-0.5"></div>
+          <div id="modal-streak-msg" class="text-xs text-amber-300 mt-1 flex items-center gap-1">
+            <span>🔥</span>
+            <span>Current Streak: <strong>1</strong></span>
+          </div>
+        </div>
+
+        <!-- Modal Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+          <button
+            id="play-again-btn"
+            type="button"
+            class="flex-1 py-3 px-5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition duration-200 shadow-lg shadow-cyan-500/25 cursor-pointer text-sm"
+          >
+            Play Next Word
+          </button>
+          <a
+            href="index.html"
+            class="py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl transition duration-200 border border-slate-700 text-sm inline-flex items-center justify-center"
+          >
+            Change Category
+          </a>
+        </div>
+      </div>
+    </dialog>
 
     <script>
+      // Fallback offline word banks matching CBSE Case Study 2.6.2 setup.sql
+      const OFFLINE_WORD_BANKS = {
+        C1: ["INDIA", "CANADA", "JAPAN", "BRAZIL", "AUSTRALIA", "EGYPT", "FRANCE", "GERMANY", "ITALY", "MEXICO", "NEPAL", "BHUTAN", "CHINA", "RUSSIA", "SPAIN", "NORWAY", "SWEDEN", "FINLAND", "DENMARK", "ICELAND"],
+        C2: ["TIGER", "LION", "ELEPHANT", "GIRAFFE", "ZEBRA", "KANGAROO", "PANDA", "MONKEY", "RABBIT", "DOLPHIN", "LEOPARD", "CHEETAH", "PENGUIN", "KANGAROO", "BEAVER"],
+        C3: ["APPLE", "BANANA", "MANGO", "ORANGE", "PINEAPPLE", "STRAWBERRY", "WATERMELON", "PAPAYA", "GRAPES", "GUAVA", "CHERRY", "PEACH", "BLUEBERRY"],
+        C4: ["POTATO", "TOMATO", "ONION", "CARROT", "BROCCOLI", "SPINACH", "CABBAGE", "CUCUMBER", "PUMPKIN", "CAULIFLOWER", "RADISH", "BEETROOT"],
+        C5: ["DELHI", "TOKYO", "LONDON", "PARIS", "BERLIN", "OTTAWA", "CANBERRA", "CAIRO", "BRASILIA", "ROME", "BEIJING", "MOSCOW", "MADRID", "ATHENS", "OSLO"]
+      };
+
+      const CATEGORY_META = {
+        C1: { icon: "🌍", name: "Countries" },
+        C2: { icon: "🦁", name: "Animals" },
+        C3: { icon: "🍎", name: "Fruits" },
+        C4: { icon: "🥦", name: "Vegetables" },
+        C5: { icon: "🏛️", name: "Capitals" }
+      };
+
+      // --- Zero-Asset Web Audio API Synthesizer ---
+      class SoundEngine {
+        constructor() {
+          this.ctx = null;
+          this.muted = localStorage.getItem("hangman_sound_muted") === "true";
+        }
+
+        init() {
+          if (!this.ctx && typeof AudioContext !== "undefined") {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+        }
+
+        toggleMute() {
+          this.muted = !this.muted;
+          localStorage.setItem("hangman_sound_muted", String(this.muted));
+          return this.muted;
+        }
+
+        playTone(freq, type = "sine", duration = 0.1, gainVal = 0.15) {
+          if (this.muted) return;
+          try {
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch (e) {
+            console.warn("Audio play error", e);
+          }
+        }
+
+        keyClick() {
+          this.playTone(240, "triangle", 0.04, 0.05);
+        }
+
+        correctChime() {
+          if (this.muted) return;
+          this.init();
+          setTimeout(() => this.playTone(587.33, "sine", 0.12, 0.15), 0); // D5
+          setTimeout(() => this.playTone(880.00, "sine", 0.2, 0.18), 80); // A5
+        }
+
+        wrongBuzz() {
+          if (this.muted) return;
+          this.init();
+          this.playTone(160, "sawtooth", 0.2, 0.15);
+        }
+
+        victoryFanfare() {
+          if (this.muted) return;
+          this.init();
+          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, "triangle", 0.25, 0.2), i * 110);
+          });
+        }
+
+        defeatTone() {
+          if (this.muted) return;
+          this.init();
+          const notes = [440, 392, 349.23, 293.66]; // A4, G4, F4, D4
+          notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, "sawtooth", 0.22, 0.15), i * 130);
+          });
+        }
+      }
+
+      // --- Lightweight Canvas Confetti Engine ---
+      class ConfettiEngine {
+        constructor(canvasId) {
+          this.canvas = document.getElementById(canvasId);
+          this.ctx = this.canvas ? this.canvas.getContext("2d") : null;
+          this.particles = [];
+          this.animId = null;
+          this.resize();
+          window.addEventListener("resize", () => this.resize());
+        }
+
+        resize() {
+          if (this.canvas) {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+          }
+        }
+
+        burst() {
+          if (!this.ctx) return;
+          this.particles = [];
+          const colors = ["#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#a855f7", "#ffffff"];
+          const count = 75;
+          for (let i = 0; i < count; i++) {
+            this.particles.push({
+              x: this.canvas.width / 2 + (Math.random() - 0.5) * 150,
+              y: this.canvas.height / 2,
+              vx: (Math.random() - 0.5) * 14,
+              vy: (Math.random() - 0.8) * 16,
+              size: Math.random() * 6 + 4,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              alpha: 1,
+              decay: Math.random() * 0.015 + 0.01
+            });
+          }
+          if (this.animId) cancelAnimationFrame(this.animId);
+          this.loop();
+        }
+
+        loop() {
+          if (!this.ctx) return;
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.particles.forEach((p) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.4; // gravity
+            p.alpha -= p.decay;
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = Math.max(p.alpha, 0);
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+          });
+          this.particles = this.particles.filter((p) => p.alpha > 0);
+          if (this.particles.length > 0) {
+            this.animId = requestAnimationFrame(() => this.loop());
+          } else {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          }
+        }
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         // --- DOM Elements ---
         const categoryNameEl = document.getElementById("category-name");
+        const categoryIconEl = document.getElementById("category-icon");
         const wordDisplayEl = document.getElementById("word-display");
         const missesDisplayEl = document.getElementById("misses-display");
+        const chancesDisplayEl = document.getElementById("chances-display");
         const keyboardEl = document.getElementById("keyboard");
         const loadingGameEl = document.getElementById("loading-game");
-        const modalEl = document.getElementById("modal");
+        const gameModal = document.getElementById("game-modal");
         const modalTitleEl = document.getElementById("modal-title");
         const modalTextEl = document.getElementById("modal-text");
+        const modalIconEl = document.getElementById("modal-icon");
+        const modalWordRevealEl = document.getElementById("modal-word-reveal");
+        const modalStreakMsgEl = document.getElementById("modal-streak-msg");
         const playAgainBtn = document.getElementById("play-again-btn");
         const rocketGroupEl = document.getElementById("rocket-group");
         const rocketFlameEl = document.getElementById("rocket-flame");
         const rocketCaptionEl = document.getElementById("rocket-caption");
         const fuelGaugeEl = document.getElementById("fuel-gauge");
+        const streakCounterEl = document.getElementById("streak-counter");
+        const soundToggleBtn = document.getElementById("sound-toggle-btn");
+        const soundIconEl = document.getElementById("sound-icon");
+        const srAnnouncerEl = document.getElementById("sr-announcer");
+        const gameArenaEl = document.getElementById("game-arena");
+
+        // --- Sound & FX Engines ---
+        const sound = new SoundEngine();
+        const confetti = new ConfettiEngine("confetti-canvas");
+
+        // Update initial sound icon
+        soundIconEl.textContent = sound.muted ? "🔇" : "🔊";
+        soundToggleBtn.addEventListener("click", () => {
+          const isMuted = sound.toggleMute();
+          soundIconEl.textContent = isMuted ? "🔇" : "🔊";
+          announceSR(isMuted ? "Sound effects muted" : "Sound effects unmuted");
+        });
 
         // --- Game State ---
         let wordToGuess = "";
         let guessedLetters = [];
         let incorrectGuesses = [];
-        let wordQueue = []; // words fetched from the API but not yet played this session
-        let currentCategoryId = null;
-        const maxMistakes = 7; // matches the case study's "seven chances"
+        let wordQueue = [];
+        let _currentCategoryId = null;
+        let currentCategoryName = "";
+        const maxMistakes = 7;
         const WORDS_PER_FETCH = 15;
 
-        // --- Fuel gauge setup (7 cells, drawn once) ---
-        const FUEL_CELL_COUNT = maxMistakes;
+        // --- Persistent Stats ---
+        let streak = parseInt(localStorage.getItem("hangman_streak") || "0", 10);
+        let bestStreak = parseInt(localStorage.getItem("hangman_best_streak") || "0", 10);
+        streakCounterEl.textContent = streak;
+
+        const updateStreak = (won) => {
+          if (won) {
+            streak++;
+            if (streak > bestStreak) {
+              bestStreak = streak;
+              localStorage.setItem("hangman_best_streak", String(bestStreak));
+            }
+          } else {
+            streak = 0;
+          }
+          localStorage.setItem("hangman_streak", String(streak));
+          streakCounterEl.textContent = streak;
+        };
+
+        // --- Screen Reader Announcements ---
+        const announceSR = (msg) => {
+          srAnnouncerEl.textContent = "";
+          setTimeout(() => {
+            srAnnouncerEl.textContent = msg;
+          }, 50);
+        };
+
+        // --- Fuel Gauge Builder (7 Cells) ---
         const buildFuelGauge = () => {
           fuelGaugeEl.innerHTML = "";
-          const cellWidth = 10;
+          const cellWidth = 12;
           const cellHeight = 14;
           const gap = 4;
-          const startY = 205 - FUEL_CELL_COUNT * (cellHeight + gap);
-          for (let i = 0; i < FUEL_CELL_COUNT; i++) {
-            const rect = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "rect"
-            );
-            rect.setAttribute("x", "20");
+          const startY = 205 - maxMistakes * (cellHeight + gap);
+          for (let i = 0; i < maxMistakes; i++) {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "18");
             rect.setAttribute("y", startY + i * (cellHeight + gap));
             rect.setAttribute("width", cellWidth);
             rect.setAttribute("height", cellHeight);
-            rect.setAttribute("rx", "2");
-            rect.setAttribute("fill", "#34d399");
+            rect.setAttribute("rx", "2.5");
+            rect.setAttribute("fill", "#10b981");
             rect.classList.add("fuel-cell");
             rect.dataset.index = String(i);
             fuelGaugeEl.appendChild(rect);
           }
         };
 
-        // --- Functions ---
-
-        // Get category info from URL
+        // --- URL Parsing ---
         const getCategoryFromURL = () => {
           const params = new URLSearchParams(window.location.search);
           const categoryId = params.get("category_id");
           const categoryName = params.get("category_name");
           if (!categoryId || !categoryName) {
-            window.location.href = "index.html"; // Redirect if no category
+            window.location.href = "index.html";
+            return { categoryId: "C1", categoryName: "Countries" };
           }
           return { categoryId, categoryName };
         };
 
-        // Fetch a batch of words for the category and refill the in-memory queue
+        // --- Fetch Words with Offline Fallback ---
         const fetchWords = async (categoryId) => {
-          let response;
           try {
-            response = await fetch(
-              `/api/words/${categoryId}?count=${WORDS_PER_FETCH}`
-            );
-            if (!response.ok) {
-              throw new Error(
-                `Network response was not ok: ${response.statusText}`
-              );
-            }
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const response = await fetch(`/api/words/${categoryId}?count=${WORDS_PER_FETCH}`, {
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            return (data.words || []).map((w) => w.toUpperCase());
-          } catch (error) {
-            console.error("Error fetching or parsing words:", error);
-            if (response) {
-              const errorText = await response.text();
-              console.error("API Response Text:", errorText);
-              wordDisplayEl.textContent = "API Error. Check console.";
-            } else {
-              wordDisplayEl.textContent = "Network Error. Check console.";
+            if (data.words && data.words.length > 0) {
+              return data.words.map((w) => w.toUpperCase());
             }
-            return [];
+          } catch (error) {
+            console.warn("Using offline word bank for category", categoryId, error);
           }
+          // Offline fallback
+          const bank = OFFLINE_WORD_BANKS[categoryId] || OFFLINE_WORD_BANKS.C1;
+          const shuffled = [...bank].sort(() => Math.random() - 0.5);
+          return shuffled;
         };
 
-        // Get the next word to play, refilling the queue from the API if empty
         const nextWord = async (categoryId) => {
           if (wordQueue.length === 0) {
             wordQueue = await fetchWords(categoryId);
           }
-          return wordQueue.shift() || null;
+          return wordQueue.shift() || "HANGMAN";
         };
 
-        // Render the keyboard in the standard QWERTY layout, so students
-        // build real typing-keyboard muscle memory while they play.
+        // --- Render Accessible QWERTY Keyboard ---
         const QWERTY_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
         const renderKeyboard = () => {
           keyboardEl.innerHTML = "";
-          QWERTY_ROWS.forEach((row, rowIndex) => {
+          QWERTY_ROWS.forEach((row) => {
             const rowEl = document.createElement("div");
-            rowEl.className = `flex gap-2 ${
-              rowIndex === 1 ? "ml-4 md:ml-6" : rowIndex === 2 ? "ml-8 md:ml-12" : ""
-            }`;
+            rowEl.className = "flex justify-center gap-1 sm:gap-1.5 w-full";
             row.split("").forEach((letter) => {
               const button = document.createElement("button");
+              button.type = "button";
               button.textContent = letter;
-              button.className = "keyboard-btn w-9 md:w-11";
+              button.className = "keyboard-btn";
               button.dataset.letter = letter;
-              button.addEventListener("click", () => handleGuess(letter));
+              button.setAttribute("aria-label", `Guess letter ${letter}`);
+              button.addEventListener("click", () => {
+                sound.keyClick();
+                handleGuess(letter);
+              });
               rowEl.appendChild(button);
             });
             keyboardEl.appendChild(rowEl);
           });
         };
 
-        // Render the word display (_ _ A _)
+        // --- Render Accessible Letter Slots ---
         const renderWordDisplay = () => {
-          const display = wordToGuess
-            .split("")
-            .map((letter) => {
-              if (letter === " ") return " ";
-              return guessedLetters.includes(letter) ? letter : "_";
-            })
-            .join(" ");
-          wordDisplayEl.textContent = display;
-          return display;
+          wordDisplayEl.innerHTML = "";
+          let unrevealedCount = 0;
+
+          wordToGuess.split("").forEach((letter, index) => {
+            const slot = document.createElement("span");
+            slot.className = "letter-slot";
+
+            if (letter === " ") {
+              slot.classList.add("space-slot");
+              slot.innerHTML = "&nbsp;";
+              slot.setAttribute("aria-hidden", "true");
+            } else if (guessedLetters.includes(letter)) {
+              slot.textContent = letter;
+              slot.classList.add("revealed");
+              slot.setAttribute("aria-label", `Letter ${index + 1}: ${letter}`);
+            } else {
+              slot.textContent = "";
+              slot.setAttribute("aria-label", `Letter ${index + 1}: Blank`);
+              unrevealedCount++;
+            }
+            wordDisplayEl.appendChild(slot);
+          });
+
+          return unrevealedCount;
         };
 
-        // Update the rocket illustration to reflect current progress
+        // --- Dynamic Rocket & 3-Tier Fuel Gauge ---
         const updateRocket = (revealedFraction, missCount) => {
-          // Rocket climbs from the pad (0) toward the Moon (1) as letters are revealed.
-          const maxLift = 175; // px of vertical travel from pad to Moon
+          const maxLift = 175;
           const lift = Math.min(revealedFraction, 1) * maxLift;
-          rocketGroupEl.setAttribute(
-            "transform",
-            `translate(0, -${lift.toFixed(1)})`
-          );
-          rocketFlameEl.classList.toggle(
-            "firing",
-            revealedFraction > 0 && revealedFraction < 1
-          );
+          rocketGroupEl.setAttribute("transform", `translate(0, -${lift.toFixed(1)})`);
+          rocketFlameEl.classList.toggle("firing", revealedFraction > 0 && revealedFraction < 1);
 
-          // Dim one fuel cell per wrong guess, counting from the top of the stack.
+          const chancesLeft = maxMistakes - missCount;
+          chancesDisplayEl.textContent = `${chancesLeft} / ${maxMistakes}`;
+
+          // Color calculation: Emerald (7-5), Amber (4-2), Rose (1)
+          let fuelColor = "#10b981";
+          if (chancesLeft <= 1) {
+            fuelColor = "#f43f5e";
+            chancesDisplayEl.className = "font-bold text-rose-400 animate-pulse";
+          } else if (chancesLeft <= 4) {
+            fuelColor = "#f59e0b";
+            chancesDisplayEl.className = "font-bold text-amber-400";
+          } else {
+            chancesDisplayEl.className = "font-bold text-emerald-400";
+          }
+
           const cells = fuelGaugeEl.querySelectorAll(".fuel-cell");
           cells.forEach((cell) => {
             const index = Number(cell.dataset.index);
-            const dim = index >= FUEL_CELL_COUNT - missCount;
-            cell.classList.toggle("spent", dim);
+            const isSpent = index >= maxMistakes - missCount;
+            cell.classList.toggle("spent", isSpent);
+            if (!isSpent) {
+              cell.setAttribute("fill", fuelColor);
+              cell.classList.toggle("critical", chancesLeft === 1);
+            } else {
+              cell.classList.remove("critical");
+            }
           });
 
+          fuelGaugeEl.setAttribute("aria-valuenow", String(chancesLeft));
+          fuelGaugeEl.setAttribute("aria-valuetext", `${chancesLeft} attempts remaining`);
+
           if (missCount >= maxMistakes) {
-            rocketCaptionEl.textContent = "Out of fuel";
+            rocketCaptionEl.textContent = "Out of Fuel • Mission Failed";
+            rocketCaptionEl.className = "text-xs font-semibold text-rose-400 h-5 block";
           } else if (revealedFraction >= 1) {
-            rocketCaptionEl.textContent = "Docked at the Moon!";
+            rocketCaptionEl.textContent = "Docked at the Moon! 🌕";
+            rocketCaptionEl.className = "text-xs font-semibold text-emerald-300 h-5 block";
           } else {
-            rocketCaptionEl.textContent = "";
+            rocketCaptionEl.textContent = `Orbit Climbing • ${chancesLeft} attempts left`;
+            rocketCaptionEl.className = "text-xs font-semibold text-cyan-300 h-5 block";
           }
         };
 
-        // Fraction of distinct letters in the word that have been guessed
         const revealedFraction = () => {
-          const letters = new Set(
-            wordToGuess.split("").filter((l) => l !== " ")
-          );
+          const letters = new Set(wordToGuess.split("").filter((l) => l !== " "));
           if (letters.size === 0) return 0;
           let revealed = 0;
           letters.forEach((l) => {
@@ -370,104 +836,141 @@
           return revealed / letters.size;
         };
 
-        // Handle a letter guess
+        // --- Handle Letter Guess ---
         const handleGuess = (letter) => {
-          if (!modalEl.classList.contains("hidden")) return;
-          if (guessedLetters.includes(letter) || !wordToGuess) return;
+          if (gameModal.open || guessedLetters.includes(letter) || !wordToGuess) return;
 
           guessedLetters.push(letter);
-
-          // Disable the guessed letter button
           const btn = keyboardEl.querySelector(`[data-letter="${letter}"]`);
-          if (btn) btn.disabled = true;
 
-          if (wordToGuess.includes(letter)) {
-            // Correct guess
-            renderWordDisplay();
+          const isCorrect = wordToGuess.includes(letter);
+          if (btn) {
+            btn.disabled = true;
+            if (isCorrect) {
+              btn.classList.add("correct-guess");
+            } else {
+              btn.classList.add("wrong-guess");
+            }
+          }
+
+          if (isCorrect) {
+            sound.correctChime();
+            const unrevealed = renderWordDisplay();
+            const instances = wordToGuess.split("").filter((l) => l === letter).length;
+            announceSR(`Correct! Letter ${letter} found ${instances > 1 ? `${instances} times` : ''}. ${unrevealed} letters remaining.`);
           } else {
-            // Incorrect guess
+            sound.wrongBuzz();
             incorrectGuesses.push(letter);
             missesDisplayEl.textContent = incorrectGuesses.join(", ");
+            gameArenaEl.classList.remove("shake-wrong");
+            void gameArenaEl.offsetWidth; // trigger reflow
+            gameArenaEl.classList.add("shake-wrong");
+
+            const remaining = maxMistakes - incorrectGuesses.length;
+            announceSR(`Incorrect. Letter ${letter} is not in the word. ${remaining} attempts remaining.`);
           }
 
           updateRocket(revealedFraction(), incorrectGuesses.length);
           checkGameOver();
         };
 
-        // Check for win/loss conditions
+        // --- Check Win / Loss ---
         const checkGameOver = () => {
-          // Check for win
           const isWinner = wordToGuess
             .split("")
-            .every(
-              (letter) => letter === " " || guessedLetters.includes(letter)
-            );
+            .every((l) => l === " " || guessedLetters.includes(l));
+
           if (isWinner) {
+            updateStreak(true);
             showModal(true);
             return;
           }
 
-          // Check for loss
           if (incorrectGuesses.length >= maxMistakes) {
+            updateStreak(false);
             showModal(false);
           }
         };
 
-        // Show game over modal
+        // --- Accessible Game Over Modal ---
         const showModal = (didWin) => {
+          modalWordRevealEl.textContent = wordToGuess;
+          modalStreakMsgEl.innerHTML = `<span>🔥</span><span>Current Streak: <strong>${streak}</strong> (Best: ${bestStreak})</span>`;
+
           if (didWin) {
-            modalTitleEl.textContent = "Congratulations!";
-            modalTitleEl.className = "text-3xl font-bold mb-4 text-cyan-400";
-            modalTextEl.textContent = `You guessed the word: ${wordToGuess}`;
+            sound.victoryFanfare();
+            confetti.burst();
+            modalIconEl.textContent = "🎉";
+            modalIconEl.className = "w-14 h-14 mx-auto rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-3xl mb-4";
+            modalTitleEl.textContent = "Mission Accomplished!";
+            modalTitleEl.className = "text-2xl sm:text-3xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-emerald-400";
+            modalTextEl.textContent = `You docked at the Moon with ${maxMistakes - incorrectGuesses.length} chances left!`;
+            announceSR(`Victory! You guessed the word ${wordToGuess}. Current streak is ${streak}.`);
           } else {
-            modalTitleEl.textContent = "Game Over";
-            modalTitleEl.className = "text-3xl font-bold mb-4 text-red-400";
-            modalTextEl.textContent = `The correct word was: ${wordToGuess}`;
+            sound.defeatTone();
+            modalIconEl.textContent = "💥";
+            modalIconEl.className = "w-14 h-14 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-3xl mb-4";
+            modalTitleEl.textContent = "Out of Fuel!";
+            modalTitleEl.className = "text-2xl sm:text-3xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-200 to-rose-400";
+            modalTextEl.textContent = "Your rocket ran out of fuel before reaching orbit.";
+            announceSR(`Game over. The correct word was ${wordToGuess}.`);
           }
-          modalEl.classList.remove("hidden");
+
+          if (typeof gameModal.showModal === "function") {
+            gameModal.showModal();
+          } else {
+            gameModal.setAttribute("open", "");
+          }
+          playAgainBtn.focus();
         };
 
-        // Initialize a new game
+        // --- Initialize Round ---
         const initGame = async () => {
+          if (gameModal.open) gameModal.close();
           loadingGameEl.classList.remove("hidden");
-          modalEl.classList.add("hidden");
-          wordDisplayEl.textContent = "";
+          wordDisplayEl.innerHTML = "";
           rocketCaptionEl.textContent = "";
 
           const { categoryId, categoryName } = getCategoryFromURL();
-          currentCategoryId = categoryId;
-          categoryNameEl.textContent = decodeURIComponent(categoryName);
+          _currentCategoryId = categoryId;
+          currentCategoryName = decodeURIComponent(categoryName);
+          categoryNameEl.textContent = currentCategoryName;
+
+          const meta = CATEGORY_META[categoryId] || CATEGORY_META[currentCategoryName] || { icon: "🚀" };
+          categoryIconEl.textContent = meta.icon;
 
           wordToGuess = await nextWord(categoryId);
-          // If nextWord returns null (due to an error), stop the game initialization
-          if (!wordToGuess) {
-            loadingGameEl.classList.add("hidden");
-            return;
-          }
-
           guessedLetters = [];
           incorrectGuesses = [];
 
           renderKeyboard();
           renderWordDisplay();
-          missesDisplayEl.textContent = "";
+          missesDisplayEl.textContent = "None";
           buildFuelGauge();
           updateRocket(0, 0);
 
           loadingGameEl.classList.add("hidden");
+          announceSR(`Game started in category ${currentCategoryName}. Word has ${wordToGuess.replace(/\s/g, "").length} letters.`);
         };
 
         // --- Event Listeners ---
-        playAgainBtn.addEventListener("click", initGame);
+        playAgainBtn.addEventListener("click", () => {
+          sound.keyClick();
+          initGame();
+        });
 
         document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && gameModal.open) {
+            gameModal.close();
+            return;
+          }
           const letter = event.key.toUpperCase();
           if (letter.length === 1 && letter >= "A" && letter <= "Z") {
             handleGuess(letter);
           }
         });
 
-        // --- Start Game ---
+        // Start Game
         initGame();
       });
     </script>

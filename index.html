@@ -1,81 +1,273 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hangman Game - Select Category</title>
+    <title>Cosmic Hangman - Select Category</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
+      :root {
+        --font-heading: "Outfit", sans-serif;
+        --font-body: "Plus Jakarta Sans", sans-serif;
+      }
       body {
-        font-family: "Inter", sans-serif;
+        font-family: var(--font-body);
+        background-color: #030712; /* Slate-950 */
+      }
+      h1, h2, h3 {
+        font-family: var(--font-heading);
+      }
+      .cosmic-gradient {
+        background: radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.15), transparent 60%),
+                    radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.12), transparent 50%),
+                    radial-gradient(circle at 20% 70%, rgba(236, 72, 153, 0.08), transparent 50%);
+      }
+      .glass-panel {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .category-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .category-card:hover {
+        background: rgba(51, 65, 85, 0.7);
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.15), 0 8px 10px -6px rgba(6, 182, 212, 0.1);
+      }
+      .category-card:active {
+        transform: translateY(0) scale(0.99);
+      }
+      a:focus-visible, button:focus-visible {
+        outline: 2px solid #06b6d4;
+        outline-offset: 3px;
+        box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25);
       }
     </style>
   </head>
-  <body
-    class="bg-gray-900 text-white flex items-center justify-center min-h-screen"
-  >
-    <div
-      class="text-center p-8 bg-gray-800 rounded-xl shadow-2xl max-w-md w-full"
-    >
-      <h1 class="text-4xl font-bold mb-2 text-cyan-400">Hangman</h1>
-      <p class="text-lg text-gray-400 mb-8">
-        Select a category to start the game
-      </p>
-
-      <div id="categories-container" class="grid grid-cols-1 gap-4">
-        <!-- Categories will be loaded here dynamically -->
-      </div>
-
-      <div id="loading" class="mt-8">
-        <p class="text-gray-500">Loading categories...</p>
-      </div>
+  <body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 cosmic-gradient selection:bg-cyan-500 selection:text-slate-900">
+    <!-- Starfield overlay -->
+    <div class="fixed inset-0 pointer-events-none opacity-40 overflow-hidden" aria-hidden="true">
+      <div class="absolute top-1/4 left-1/5 w-1 h-1 bg-cyan-300 rounded-full animate-ping"></div>
+      <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-indigo-300 rounded-full animate-pulse"></div>
+      <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white rounded-full"></div>
+      <div class="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-pink-300 rounded-full animate-pulse"></div>
     </div>
 
+    <!-- Main Container -->
+    <main class="w-full max-w-lg z-10 my-8">
+      <div class="glass-panel p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+        <!-- Ambient Top Accent Glow -->
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-8 relative">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold uppercase tracking-wider mb-3">
+            <span>🚀</span>
+            <span>Class XII CBSE Case Study 2.6.2</span>
+          </div>
+          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-cyan-400">
+            Cosmic Hangman
+          </h1>
+          <p class="text-slate-400 text-sm sm:text-base mt-2">
+            Fuel your rocket and reach the Moon with 7 chances!
+          </p>
+
+          <!-- Player Streak / Stats Banner -->
+          <div id="stats-banner" class="mt-4 inline-flex items-center gap-4 px-4 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300">
+            <span class="flex items-center gap-1.5">
+              <span class="text-amber-400">🔥</span>
+              <span>Streak: <strong id="current-streak" class="text-white">0</strong></span>
+            </span>
+            <span class="h-3 w-px bg-slate-700"></span>
+            <span class="flex items-center gap-1.5">
+              <span class="text-cyan-400">🏆</span>
+              <span>Best: <strong id="best-streak" class="text-white">0</strong></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Section Title -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Choose Mission Category
+          </h2>
+          <span id="category-count-badge" class="text-xs text-cyan-400/80 font-medium"></span>
+        </div>
+
+        <!-- Shimmer Skeleton Loading State -->
+        <div id="skeleton-loading" class="space-y-3">
+          <div class="h-16 bg-slate-800/70 rounded-xl animate-pulse border border-slate-700/40"></div>
+          <div class="h-16 bg-slate-800/70 rounded-xl animate-pulse border border-slate-700/40"></div>
+          <div class="h-16 bg-slate-800/70 rounded-xl animate-pulse border border-slate-700/40"></div>
+          <div class="h-16 bg-slate-800/70 rounded-xl animate-pulse border border-slate-700/40"></div>
+          <div class="h-16 bg-slate-800/70 rounded-xl animate-pulse border border-slate-700/40"></div>
+        </div>
+
+        <!-- Categories Container -->
+        <ul id="categories-container" class="space-y-3 hidden">
+          <!-- Dynamically populated category cards -->
+        </ul>
+
+        <!-- Error State Card (Hidden by default) -->
+        <div id="error-container" class="hidden p-5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-center space-y-4">
+          <div class="w-10 h-10 mx-auto rounded-full bg-rose-900/50 flex items-center justify-center text-rose-400 text-lg">
+            ⚠️
+          </div>
+          <div>
+            <p id="error-message" class="text-rose-200 text-sm font-medium">Unable to connect to the game server.</p>
+            <p class="text-slate-400 text-xs mt-1">You can retry or continue with standard offline mission categories.</p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2 justify-center pt-1">
+            <button id="retry-btn" type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold transition">
+              🔄 Retry Server
+            </button>
+            <button id="offline-btn" type="button" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold transition">
+              🚀 Play Offline Categories
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-8 pt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+          <span>Standard CBSE 7-Chance Rule</span>
+          <span class="flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Cloudflare D1 Ready
+          </span>
+        </div>
+      </div>
+    </main>
+
     <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        const categoriesContainer = document.getElementById(
-          "categories-container"
-        );
-        const loadingIndicator = document.getElementById("loading");
+      // Fallback offline categories conforming to CBSE Case Study 2.6.2 setup.sql
+      const OFFLINE_CATEGORIES = [
+        { Category_Id: "C1", Category_Name: "Countries", icon: "🌍", desc: "Nations around the world" },
+        { Category_Id: "C2", Category_Name: "Animals", icon: "🦁", desc: "Wildlife & creatures" },
+        { Category_Id: "C3", Category_Name: "Fruits", icon: "🍎", desc: "Sweet & healthy produce" },
+        { Category_Id: "C4", Category_Name: "Vegetables", icon: "🥦", desc: "Nutritious garden veggies" },
+        { Category_Id: "C5", Category_Name: "Capitals", icon: "🏛️", desc: "World capital cities" }
+      ];
 
-        try {
-          // Fetch categories from the Cloudflare Worker API
-          const response = await fetch("/api/categories");
-          if (!response.ok) {
-            throw new Error("Failed to fetch categories.");
-          }
-          const categories = await response.json();
+      const CATEGORY_META = {
+        C1: { icon: "🌍", desc: "Nations around the world" },
+        C2: { icon: "🦁", desc: "Wildlife & creatures" },
+        C3: { icon: "🍎", desc: "Sweet & healthy produce" },
+        C4: { icon: "🥦", desc: "Nutritious garden veggies" },
+        C5: { icon: "🏛️", desc: "World capital cities" },
+        Countries: { icon: "🌍", desc: "Nations around the world" },
+        Animals: { icon: "🦁", desc: "Wildlife & creatures" },
+        Fruits: { icon: "🍎", desc: "Sweet & healthy produce" },
+        Vegetables: { icon: "🥦", desc: "Nutritious garden veggies" },
+        Capitals: { icon: "🏛️", desc: "World capital cities" }
+      };
 
-          loadingIndicator.style.display = "none";
+      document.addEventListener("DOMContentLoaded", () => {
+        const categoriesContainer = document.getElementById("categories-container");
+        const skeletonLoading = document.getElementById("skeleton-loading");
+        const errorContainer = document.getElementById("error-container");
+        const errorMessage = document.getElementById("error-message");
+        const retryBtn = document.getElementById("retry-btn");
+        const offlineBtn = document.getElementById("offline-btn");
+        const categoryCountBadge = document.getElementById("category-count-badge");
+        const currentStreakEl = document.getElementById("current-streak");
+        const bestStreakEl = document.getElementById("best-streak");
 
-          if (categories.length === 0) {
-            categoriesContainer.innerHTML =
-              '<p class="text-red-400">No categories found. Please add some to the database.</p>';
-            return;
-          }
+        // Load Persistent Stats
+        const streak = parseInt(localStorage.getItem("hangman_streak") || "0", 10);
+        const bestStreak = parseInt(localStorage.getItem("hangman_best_streak") || "0", 10);
+        currentStreakEl.textContent = streak;
+        bestStreakEl.textContent = bestStreak;
 
-          // Create a button for each category
-          categories.forEach((category) => {
-            const button = document.createElement("a");
-            button.href = `game.html?category_id=${
-              category.Category_Id
-            }&category_name=${encodeURIComponent(category.Category_Name)}`;
-            button.className =
-              "block w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300 ease-in-out transform hover:scale-105";
-            button.textContent = category.Category_Name;
-            categoriesContainer.appendChild(button);
+        const renderCategories = (categories) => {
+          categoriesContainer.innerHTML = "";
+          categoryCountBadge.textContent = `${categories.length} Categories`;
+
+          categories.forEach((cat) => {
+            const meta = CATEGORY_META[cat.Category_Id] || CATEGORY_META[cat.Category_Name] || { icon: "🎮", desc: "Vocabulary challenge" };
+            
+            const li = document.createElement("li");
+            const card = document.createElement("a");
+            card.href = `game.html?category_id=${encodeURIComponent(cat.Category_Id)}&category_name=${encodeURIComponent(cat.Category_Name)}`;
+            card.className = "category-card group flex items-center justify-between p-4 rounded-xl cursor-pointer";
+            card.setAttribute("aria-label", `Play category ${cat.Category_Name}`);
+
+            card.innerHTML = `
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-slate-800/90 border border-slate-700/60 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200" aria-hidden="true">
+                  ${meta.icon}
+                </div>
+                <div class="text-left">
+                  <div class="font-bold text-slate-100 group-hover:text-cyan-300 transition-colors text-base">
+                    ${cat.Category_Name}
+                  </div>
+                  <div class="text-xs text-slate-400">
+                    ${meta.desc}
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center text-slate-400 group-hover:text-cyan-300 group-hover:translate-x-1 transition-all duration-200" aria-hidden="true">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            `;
+            li.appendChild(card);
+            categoriesContainer.appendChild(li);
           });
-        } catch (error) {
-          loadingIndicator.style.display = "none";
-          categoriesContainer.innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`;
-          console.error("Error fetching categories:", error);
-        }
+
+          skeletonLoading.classList.add("hidden");
+          errorContainer.classList.add("hidden");
+          categoriesContainer.classList.remove("hidden");
+        };
+
+        const fetchCategories = async () => {
+          skeletonLoading.classList.remove("hidden");
+          categoriesContainer.classList.add("hidden");
+          errorContainer.classList.add("hidden");
+
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            
+            const response = await fetch("/api/categories", { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+
+            const categories = await response.json();
+            if (!Array.isArray(categories) || categories.length === 0) {
+              throw new Error("No categories found in database.");
+            }
+
+            renderCategories(categories);
+          } catch (err) {
+            console.warn("Could not fetch remote categories. Ready for offline fallback.", err);
+            skeletonLoading.classList.add("hidden");
+            errorMessage.textContent = err.name === "AbortError" 
+              ? "Connection timed out reaching Cloudflare D1." 
+              : `Connection Notice: ${err.message}`;
+            errorContainer.classList.remove("hidden");
+          }
+        };
+
+        retryBtn.addEventListener("click", fetchCategories);
+        offlineBtn.addEventListener("click", () => renderCategories(OFFLINE_CATEGORIES));
+
+        // Initial fetch
+        fetchCategories();
       });
     </script>
   </body>
