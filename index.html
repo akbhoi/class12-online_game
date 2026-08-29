@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark" style="background-color: #030712; color-scheme: dark;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Play Cosmic Hangman - an interactive Class XII CBSE educational vocabulary game powered by Cloudflare with rocket launch progression." />
+    <meta name="theme-color" content="#030712" />
     <title>Cosmic Hangman - Select Category</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,37 +15,44 @@
     />
     <style>
       :root {
+        color-scheme: dark;
         --font-heading: "Outfit", sans-serif;
         --font-body: "Plus Jakarta Sans", sans-serif;
       }
-      body {
+      html, body {
+        background-color: #030712;
+        color: #f8fafc;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
         font-family: var(--font-body);
-        background-color: #030712; /* Slate-950 */
+        overflow-x: hidden;
       }
       h1, h2, h3 {
         font-family: var(--font-heading);
       }
-      .cosmic-gradient {
-        background: radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.15), transparent 60%),
-                    radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.12), transparent 50%),
-                    radial-gradient(circle at 20% 70%, rgba(236, 72, 153, 0.08), transparent 50%);
-      }
       .glass-panel {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.78);
+        backdrop-filter: blur(28px) saturate(190%);
+        -webkit-backdrop-filter: blur(28px) saturate(190%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 
+          0 25px 60px -15px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(255, 255, 255, 0.08),
+          0 0 50px -10px rgba(6, 182, 212, 0.25);
+        transform: perspective(1000px) translateZ(0);
+        transition: transform 300ms ease, box-shadow 300ms ease;
       }
       .category-card {
-        background: rgba(30, 41, 59, 0.6);
+        background: rgba(30, 41, 59, 0.65);
         border: 1px solid rgba(255, 255, 255, 0.08);
         transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
       }
       .category-card:hover {
-        background: rgba(51, 65, 85, 0.7);
-        border-color: rgba(6, 182, 212, 0.4);
+        background: rgba(51, 65, 85, 0.8);
+        border-color: rgba(6, 182, 212, 0.5);
         transform: translateY(-2px) scale(1.01);
-        box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.15), 0 8px 10px -6px rgba(6, 182, 212, 0.1);
+        box-shadow: 0 12px 30px -5px rgba(6, 182, 212, 0.2), 0 8px 10px -6px rgba(6, 182, 212, 0.15);
       }
       .category-card:active {
         transform: translateY(0) scale(0.99);
@@ -53,20 +62,37 @@
         outline-offset: 3px;
         box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25);
       }
+      @keyframes float-gentle {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+      }
+      .floating-effect {
+        animation: float-gentle 6s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .floating-effect {
+          animation: none;
+        }
+      }
     </style>
   </head>
-  <body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 cosmic-gradient selection:bg-cyan-500 selection:text-slate-900">
-    <!-- Starfield overlay -->
-    <div class="fixed inset-0 pointer-events-none opacity-40 overflow-hidden" aria-hidden="true">
+  <body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-cyan-500 selection:text-slate-900 relative">
+    <!-- Ambient Cosmic Glowing Nebulas (3D Floating Depth) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+      <div class="absolute -top-32 -left-32 w-96 h-96 sm:w-[500px] sm:h-[500px] rounded-full bg-cyan-500/20 blur-[100px]"></div>
+      <div class="absolute top-1/2 -right-32 -translate-y-1/2 w-96 h-96 sm:w-[550px] sm:h-[550px] rounded-full bg-indigo-600/20 blur-[120px]"></div>
+      <div class="absolute -bottom-32 left-1/3 w-80 h-80 sm:w-[450px] sm:h-[450px] rounded-full bg-pink-500/15 blur-[100px]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-15"></div>
+      <!-- Twinkling stars -->
       <div class="absolute top-1/4 left-1/5 w-1 h-1 bg-cyan-300 rounded-full animate-ping"></div>
       <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-indigo-300 rounded-full animate-pulse"></div>
       <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white rounded-full"></div>
       <div class="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-pink-300 rounded-full animate-pulse"></div>
     </div>
 
-    <!-- Main Container -->
-    <main class="w-full max-w-lg z-10 my-8">
-      <div class="glass-panel p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+    <!-- Main 3D Floating Container -->
+    <main class="w-full max-w-lg z-10 my-8 floating-effect">
+      <div class="glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
         <!-- Ambient Top Accent Glow -->
         <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
 
